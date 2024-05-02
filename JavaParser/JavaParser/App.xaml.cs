@@ -14,7 +14,7 @@
             var window = base.CreateWindow(activationState);
 
             window.Width = 400;
-            window.Height = 540;
+            window.Height = 150;
 
             return window;
         }

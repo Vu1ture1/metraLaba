@@ -1,44 +1,98 @@
-using JavaParser.Parse;
-using System.Diagnostics;
-namespace JavaParser;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 
-public partial class ResultPage : ContentPage
+namespace JavaParser
 {
-	public ResultPage() 
-	{
-        string filePath = @"C:\Users\Артём\Desktop\JavaCode.txt";
-        string str = File.ReadAllText(filePath);
-        string outputStr = "";
-        ClassParse parser = new ClassParse();
-        List<string> javaCode = parser.SplitString(str);
-        List<CodeElement> result = parser.Parse(javaCode);
-        int count = 0;
-        int countt = 0;
-        int countoperand = 0;
-        int countoperator = 0;
-        int operatorQuantity = 0;
-        int operandQuantity = 0;
-        outputStr += "Name\t\tQuantity\tType\n";
-        Debug.WriteLine("Name\t\tQuantity\tType");
-        foreach (var item in result)
+    public partial class ResultPage : ContentPage
+    {
+        public ResultPage()
         {
-           
-            if (item.Quantity != 0)
+            string outputStr = "";
+            string filePath = @"C:\Parser\JavaCode.txt";
+            Dictionary<string, int> operatorCounts = new Dictionary<string, int>();
+
+            int maxDepth = 0;
+            int currentDepth = 0;
+
+            using (StreamReader reader = new StreamReader(filePath))
             {
-                if (!outputStr.Contains($"{item.Name}\t\t{item.Quantity}\t\t{item.Type}\n"))
+                string line;
+                int lineNumber = 1;
+
+                while ((line = reader.ReadLine()) != null)
                 {
-                    if (item.Type == "operator") { countoperator++; operatorQuantity += item.Quantity; }
-                    if (item.Type == "operand") { countoperand++; operandQuantity += item.Quantity; }
-                    outputStr += $"{item.Name}\t\t{item.Quantity}\t\t{item.Type}\n";
+                    MatchCollection matches = Regex.Matches(line, @"\b(class|\*|\+|-|<|==|!=|>=|&&|\|\||\[\]|\(\)|;|:|{}|\+\+|for|switch|if|else|while|case|--|\.\w+)\b(?=(?:[^""\\]*(\\.|""([^""\\]*\\.)*[^""\\]*""))*[^""]*$)\b");
+                    MatchCollection matches2 = Regex.Matches(line, @"(?:\+{1,2}|\-{1,2}|==|!=|\/|\*|>|<|<=|>=|;|:)");
+
+                    foreach (Match match in matches)
+                    {
+                        string operatorValue = match.Value;
+                        if (!operatorCounts.ContainsKey(operatorValue))
+                        {
+                            operatorCounts[operatorValue] = 0;
+                        }
+                        operatorCounts[operatorValue]++;
+                    }
+                     
+                    
+                    foreach (Match match in matches2)
+                    {
+                        string operatorValue = match.Value;
+                        if (!operatorCounts.ContainsKey(operatorValue))
+                        {
+                            operatorCounts[operatorValue] = 0;
+                        }
+                        operatorCounts[operatorValue]++;
+                    }
+                    if (line.Contains("if") || line.Contains("else") || line.Contains("for") || line.Contains("while") || line.Contains("case"))
+                    {
+                        currentDepth++;
+                        if (currentDepth > maxDepth)
+                        {
+                            maxDepth = currentDepth;
+                        }
+                    }
+                    if (line.Contains("}"))
+                    {
+                        currentDepth--;
+                    }
+                    if (line.Contains("default"))
+                    {
+                        if (currentDepth > maxDepth)
+                        {
+                            maxDepth = currentDepth;
+                        }
+                        currentDepth = 0;
+                    }
+                    lineNumber++;
                 }
-                Debug.WriteLine($"{item.Name}\t\t{item.Quantity}\t\t{item.Type}");
             }
+            
+            int ysloper = 0;
+            int fuloper = 0;
+
+            foreach (var kvp in operatorCounts)
+            {
+                if (kvp.Key == "if" || kvp.Key == "else" || kvp.Key == "switch" || kvp.Key == "case" || kvp.Key == "for"|| kvp.Key == "while")
+                {
+                    ysloper += kvp.Value;
+                }
+                else
+                {
+                    fuloper += kvp.Value;
+                }
+                outputStr += $"\nOperator '{kvp.Key}' found {kvp.Value} times.";
+            }
+
+            fuloper += ysloper;
+            InitializeComponent();
+            ResOutput.Text += outputStr;
+            ResOutput.Text += $"\nКоличество условных операторов {ysloper}";
+            ResOutput.Text += $"\nКоличество операторов {fuloper}";
+            ResOutput.Text += $"\nНасыщенность условными операторами {(ysloper / (double)fuloper)}";
+            ResOutput.Text += $"\nМаксимальная глубина ветвления {maxDepth - 1}";
         }
-        int Diction = countoperand + countoperator;
-        int Length = operandQuantity + operatorQuantity;
-        int Volume = (int)(Length * Math.Log2(Diction));
-        outputStr += $"Словарь программы: {Diction}\nДлина программы: {Length}\nОбъем программы: {Volume}";
-        InitializeComponent();
-        ResOutput.Text = outputStr;
-	}
+    }
 }

@@ -1,152 +1,69 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace JavaParser.Parse
+class Parese
 {
-    public class CodeElement
+    static void Main(string[] args)
     {
-        public string Name { get; set; }
-        public int Quantity { get; set; }
-        public string Type { get; set; }
+        // Путь к файлу для парсинга
+        string filePath = @"C:\AAAA_Parser\parser\JavaCode.txt";
+
+        // Создание словаря для хранения количества вхождений операторов
+        Dictionary<string, int> operatorCounts = new Dictionary<string, int>();
+
+        // Открытие файла для чтения
+        using (StreamReader reader = new StreamReader(filePath))
+        {
+            string line;
+            int lineNumber = 1;
+
+            // Чтение файла построчно
+            while ((line = reader.ReadLine()) != null)
+            {
+                // Поиск операторов в текущей строке
+                MatchCollection matches = Regex.Matches(line, @"\b(class|\*|\+|-|<|==|!=|>=|&&|\|\||\[\]|\(\)|;|:|{}|\+\+|for|switch|if|else|while|--|\.\w+)\b");
+                MatchCollection matches2 = Regex.Matches(line, @"(?:\+{1,2}|\-{1,2}|==|!=|\/|\*|>|<|<=|>=|;|:)");                // Увеличение счетчика для каждого найденного оператора
+                foreach (Match match in matches)
+                {
+                    string operatorValue = match.Value;
+                    if (!operatorCounts.ContainsKey(operatorValue))
+                    {
+                        operatorCounts[operatorValue] = 0;
+                    }
+                    operatorCounts[operatorValue]++;
+                }
+                foreach (Match match in matches2)
+                {
+                    string operatorValue = match.Value;
+                    if (!operatorCounts.ContainsKey(operatorValue))
+                    {
+                        operatorCounts[operatorValue] = 0;
+                    }
+                    operatorCounts[operatorValue]++;
+                }
+                lineNumber++;
+            }
+        }
+        int ysloper = 0;
+        int fuloper = 0;
+        // Вывод количества каждого оператора
+        foreach (var kvp in operatorCounts)
+        {
+            if (kvp.Key == "if"  kvp.Key == "else"  kvp.Key == "switch")
+            {
+                ysloper += kvp.Value;
+            }
+            else
+            {
+                fuloper += kvp.Value;
+            }
+            Console.WriteLine($"Operator '{kvp.Key}' found {kvp.Value} times.");
+        }
+        fuloper += ysloper;
+        Console.WriteLine($"Количество условных операторов '{ysloper}'");
+        Console.WriteLine($"Количество операторов операторов '{fuloper}'");
+        Console.WriteLine($"Насыщенность условными операторами'{(ysloper / (1.0 * fuloper))}'");
     }
-
-    public class ClassParse
-    {
-        private List<CodeElement> res = new List<CodeElement>();
-
-        public List<CodeElement> Parse(List<string> javaCode)
-        {
-            string[] operators = {
-            "+", "-", "*", "/", "%", "<", ">", "=", "==", "!=", ">=", "<=", "&&", "||", "|", "&", "<<", ">>", "^",
-            "+=", "-=", "*=", "/=", "&=", "%=", "|=", "^=", ">>=", "<<=", "++", "--", "{}", "[]", "()", ";", "while",
-            "for", "if", "else", "elseif", "switch", ":"
-        };
-
-            foreach (string str in javaCode)
-            {
-                foreach (string op in operators)
-                {
-                    if (op == "++")
-                    {
-                        if (Regex.IsMatch(str, @"\w+\+\+") || Regex.IsMatch(str, @"\+\+\w+"))
-                        {
-                            IncrementElementQuantity(op);
-                        }
-                    }
-                    else if (op == "--")
-                    {
-                        if (Regex.IsMatch(str, @"\w+\-\-") || Regex.IsMatch(str, @"\-\-\w+"))
-                        {
-                            IncrementElementQuantity(op);
-                        }
-                    }
-                    else if (op == "for" || op == "while" || op == ";" || op == "else" || op == "if" || op == "elseif" || op == "switch")
-                    {
-                        if (str.Contains(op))
-                        {
-                            IncrementElementQuantity(op);
-                        }
-                    }
-                    else if (op == "{}")
-                    {
-                        if (str.Contains(op[0]) || str.Contains(op[1]))
-                        {
-                            IncrementElementQuantity(op);
-                        }
-                    }
-                    else if (op == "[]" || op == "()")
-                    {
-                        Regex reg = new Regex("\\" + op[0]);
-                        MatchCollection matches = reg.Matches(str);
-                        IncrementElementQuantity(op, matches.Count);
-                    }
-                    else if (op == "||")
-                    {
-                        Regex reg = new Regex("(\\w+)?\\s(\\|\\|)\\s(\\w+)?");
-                        MatchCollection matches = reg.Matches(str);
-                        IncrementElementQuantity(op, matches.Count);
-                    }
-                    else
-                    {
-                        Regex reg = new Regex($"(\\w+)?\\s({Regex.Escape(op)})\\s(\\w+)?");
-                        MatchCollection matches = reg.Matches(str);
-                        IncrementElementQuantity(op, matches.Count);
-                    }
-                }
-            }
-
-            AddOperands(javaCode);
-            FindOperands(javaCode);
-
-            foreach (var element in res)
-            {
-                if (element.Name == "{}")
-                {
-                    element.Quantity /= 2;
-                }
-            }
-
-            return res;
-        }
-
-        public List<String> SplitString(String str)
-        {
-            List<string> substrings = new List<string>();
-
-            string[] parts = str.Split('\n');
-
-            foreach (var part in parts)
-            {
-                substrings.Add(part);
-            }
-
-            return substrings;
-        }
-        private void IncrementElementQuantity(string name, int increment = 1)
-        {
-            foreach (var item in res)
-            {
-                if (item.Name == name)
-                {
-                    item.Quantity += increment;
-                    return;
-                }
-            }
-
-            res.Add(new CodeElement { Name = name, Quantity = increment, Type = "operator" });
-        }
-
-        private void AddOperands(List<string> javaCode)
-        {
-            Regex reg = new Regex(@"\b(?:int|short|byte|long|float|double|boolean|char|String)(?:\[)?(?:\])?\s+(\w+)\s*=");
-            foreach (var str in javaCode)
-            {
-                Match match = reg.Match(str);
-                if (match.Success)
-                {
-                    string operandName = match.Groups[1].Value;
-                    if (!res.Contains(new CodeElement { Name = operandName, Quantity = 0, Type = "operand" }))
-                        res.Add(new CodeElement { Name = operandName, Quantity = 0, Type = "operand" });
-                }
-            }
-        }
-
-        private void FindOperands(List<string> javaCode)
-        {
-            foreach (var str in javaCode)
-            {
-                foreach (var item in res)
-                {
-                    Regex reg = new Regex($"\\b{Regex.Escape(item.Name)}\\b", RegexOptions.IgnoreCase);
-                    MatchCollection matches = reg.Matches(str);
-                    item.Quantity += matches.Count;
-                }
-            }
-        }
-    }
-}
-
+}*/
