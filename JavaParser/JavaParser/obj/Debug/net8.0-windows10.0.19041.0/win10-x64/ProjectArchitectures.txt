@@ -1,1 +1,1 @@
-C:\Parser\JavaParser\JavaParser\JavaParser.csproj;x64
+C:\Users\mihai\Source\Repos\parser\JavaParser\JavaParser\JavaParser.csproj;x64

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JavaParser")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+530fac33d8cba6223d6ce2f783e797c362c4c086")]
 [assembly: System.Reflection.AssemblyProductAttribute("JavaParser")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JavaParser")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
